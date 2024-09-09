@@ -1,11 +1,16 @@
 import 'dart:collection';
 import 'package:scoped_model/scoped_model.dart';
+
+
 import 'expense.dart';
+// import 'expense_database.dart';
 import 'database.dart';
 
 class ExpenseListModel extends Model {
 
-  ExpenseListModel() {load(); }
+  ExpenseListModel() { load(); }
+
+  // static final expenseDatabase = SQLiteDbProvider._();
 
   final List<Expense> _items = [];
 
@@ -50,7 +55,7 @@ class ExpenseListModel extends Model {
   //add used to add a new items into the _items variable & into the database and notifyListeners for UI
   void add(Expense item) {
     SQLiteDbProvider.db.insert(item).then(  (val) {
-      _items.add(val);
+      _items.add(item);
 
       notifyListeners();
     });

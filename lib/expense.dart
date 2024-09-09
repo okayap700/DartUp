@@ -8,7 +8,8 @@ class Expense {
 
   String get formattedDate{
     var formatter = DateFormat('yyyy-MM-dd');
-    return formatter.format(date);
+    // ignore: unnecessary_this
+    return formatter.format(this.date);
   }
 
   static final columns = ['id', 'amount', 'date', 'category'];

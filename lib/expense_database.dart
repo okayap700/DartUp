@@ -1,4 +1,4 @@
-
+/*
 import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart';
@@ -91,11 +91,11 @@ class SQLiteDbProvider {
     return Expense(id as int, expense.amount, expense.date, expense.category);
   }
 
-  Future<int?> update(Expense item) async {
+  Future<int?> update(Expense product) async {
     final db = await database;
 
     var result = await db?.update(
-        "Expense", item.toMap(), where: "id = ?", whereArgs: [item.id]);
+        "Expense", product.toMap(), where: "id = ?", whereArgs: [product.id]);
 
     return result;
   }
@@ -104,50 +104,46 @@ class SQLiteDbProvider {
     final db = await database;
     db?.delete("Expense", where: "id = ?", whereArgs: [id]);
   }
+}*/
+
+import 'package:firebase_database/firebase_database.dart';
+import 'expense.dart';
+
+
+class ExpenseDatabase {
+
+  final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
+
+  DatabaseReference get databaseRef => _databaseRef;
+
+  // Add a new expense
+  Future<void> addExpense(Expense expense) async {
+    final newExpenseRef = _databaseRef.child('expenses').push();
+    await newExpenseRef.set(expense.toMap());
+  }
+
+  // Get all expenses
+  Future<List<Expense>> getAllExpenses() async {
+    final snapshot = await _databaseRef.child('expenses').get();
+    if (snapshot.exists) {
+      final List<Expense> expenses = [];
+      for (var childSnapshot in snapshot.children) {
+        final expenseData = childSnapshot.value as Map<dynamic, dynamic>;
+        expenses.add(Expense.fromMap(expenseData));
+      }
+      return expenses;
+    }
+    return [];
+  }
+
+  // Update an existing expense (assuming you have the expense ID)
+  Future<void> updateExpense(Expense expense) async {
+    await _databaseRef.child('expenses/${expense.id}').update(expense.toMap());
+  }
+
+  // Delete an expense (assuming you have the expense ID)
+  Future<void> deleteExpense(int expenseId) async {
+    await _databaseRef.child('expenses/$expenseId').remove();
+  }
 }
-
-// import 'package:firebase_database/firebase_database.dart';
-// import 'expense.dart';
-
-
-// class ExpenseDatabase {
-//   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
-
-//   // Add a new expense
-//   Future<void> addExpense(Expense expense) async {
-//     final newExpenseRef = _databaseRef.child('expenses').push();
-//     await newExpenseRef.set(expense.toMap());
-//   }
-
-//   // Get all expenses
-//   Future<List<Expense>> getAllExpenses() async {
-//     final snapshot = await _databaseRef.child('expenses').get();
-//     if (snapshot.exists) {
-//       final List<Expense> expenses = [];
-
-//       for (var _ in snapshot.children){
-//         (childSnapshot) {
-//         final expenseData = childSnapshot.value as Map<dynamic, dynamic>;
-//         expenses.add(Expense.fromMap(expenseData));
-//       };
-//       }
-//       /*snapshot.children.forEach((childSnapshot) {
-//         final expenseData = childSnapshot.value as Map<dynamic, dynamic>;
-//         expenses.add(Expense.fromMap(expenseData));
-//       });*/
-//       return expenses;
-//     }
-//     return [];
-//   }
-
-//   // Update an existing expense (assuming you have the expense ID)
-//   Future<void> updateExpense(Expense expense) async {
-//     await _databaseRef.child('expenses/${expense.id}').update(expense.toMap());
-//   }
-
-//   // Delete an expense (assuming you have the expense ID)
-//   Future<void> deleteExpense(int expenseId) async {
-//     await _databaseRef.child('expenses/$expenseId').remove();
-//   }
-// }
 
