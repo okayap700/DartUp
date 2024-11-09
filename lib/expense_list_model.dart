@@ -3,8 +3,8 @@ import 'package:scoped_model/scoped_model.dart';
 
 
 import 'expense.dart';
-// import 'expense_database.dart';
-import 'database.dart';
+import 'expense_database.dart';
+// import 'database.dart';
 
 class ExpenseListModel extends Model {
 
@@ -13,6 +13,8 @@ class ExpenseListModel extends Model {
   // static final expenseDatabase = SQLiteDbProvider._();
 
   final List<Expense> _items = [];
+  final _database = ExpenseDatabase();
+
 
   UnmodifiableListView<Expense> get items => UnmodifiableListView(_items);
 
@@ -30,15 +32,15 @@ class ExpenseListModel extends Model {
     return amount;
   }
 
-  void load() {
-    Future<List<Expense>> list = SQLiteDbProvider.db.getAllExpenses();
-
-    list.then((dbItems) {
-      for(var i = 0; i < dbItems.length; i++){
-        _items.add(dbItems[i]);
-      }
+  Future<void> load() async {
+    try{
+      final dbItems = await _database.getAllExpenses();
+      _items.clear();
+      _items.addAll(dbItems);
       notifyListeners();
-    });
+    } catch (e) {
+      print("Error loading expenses: $e");
+    }
   }
 
   //by Id used to get particular expense from _items variable
@@ -52,45 +54,39 @@ class ExpenseListModel extends Model {
     return null;
   }
 
-  //add used to add a new items into the _items variable & into the database and notifyListeners for UI
-  void add(Expense item) {
-    SQLiteDbProvider.db.insert(item).then(  (val) {
+  //add used to add a new item into the _items list & into the database and notifyListeners for UI
+  Future<void> add (Expense item) async {
+    try {
+      await _database.addExpense(item);
       _items.add(item);
-
       notifyListeners();
-    });
+    } catch (e) {
+      print("Error adding expense: $e");
+    }
   }
 
   //update used to update the _items variable & into the database and notifyListeners for UI
-  void update(Expense item) {
-    bool found = false;
+  Future<void> update (Expense item) async {
+    try {
+      await _database.updateExpense(item);
 
-    for(var i = 0; i < _items.length; i++) {
-      if(_items[i].id == item.id) {
-        _items[i] = item;
-        found = true;
-        SQLiteDbProvider.db.update(item);
-        break;
+      final index = items.indexWhere( (element) => element.id == item.id);
+      if (index != -1) {
+        _items[index] = item;
+        notifyListeners();
       }
+    } catch (e) {
+      print("Error updating expense: $e");
     }
-
-    if (found) notifyListeners();
   }
 
-  //delete used to remove existing expense from item in in _items & database & calls notifyListeners for UI
-  void delete(Expense item){
-
-    bool found = false;
-
-    for(int i = 0; i < _items.length; i++) {
-      if(_items[i].id == item.id) {
-        found = true;
-        SQLiteDbProvider.db.delete(item.id);
-        _items.removeAt(i);
-        break;
-      }
+  Future<void> delete (Expense item) async {
+    try {
+      await _database.deleteExpense(item.id);
+      _items.remove(item);
+      notifyListeners();
+    } catch (e) {
+      print("Error deleting expense: $e");
     }
-
-    if (found) notifyListeners();
   }
 }

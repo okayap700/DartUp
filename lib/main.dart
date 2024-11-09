@@ -29,11 +29,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Expense Ledger',
+      title: 'LedgeEx',
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: const MyHomePage(title: 'Expense Ledger'),
+      home: const MyHomePage(title: 'Expense tracker'),
     );
   }
 }
@@ -42,6 +42,8 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
+
+
 
   @override
   // ignore: library_private_types_in_public_api, no_logic_in_create_state
@@ -53,6 +55,32 @@ class _MyHomePageState extends State<MyHomePage> {
   _MyHomePageState({required this.title});
 
   final String title;
+
+  void _confirmDelete(BuildContext context, Function delete) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Delete Entry"),
+          content: const Text("Are you sure you want to delete this expense entry?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop() ,
+              child: const Text("Cancel")
+            ),
+            TextButton(
+              onPressed: (){
+                delete;
+
+                Navigator.of(context).pop();
+              },
+              child: const Text("Delete"),
+            )
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,17 +98,43 @@ class _MyHomePageState extends State<MyHomePage> {
                     title: Text("Total expenses: ${expenses.totalExpense}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),));
                 } else {
                   index = index - 1;
-                  return Dismissible(
-                      key: Key(expenses.items[index].id.toString()),
-                      onDismissed: (direction){
-                        expenses.delete(expenses.items[index]);
+                  return GestureDetector(
+                    onLongPress: (){
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (BuildContext context){
+                          return Wrap( children: <Widget>[
+                            ListTile(
+                              leading: const Icon(Icons.edit),
+                              title: const Text('Edit'),
+                              onTap: (){
+                                Navigator.push( context, MaterialPageRoute( builder: (context) => FormPage(
+                                  id: expenses.items[index].id,
+                                  expenses: expenses,))
+                                );
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.delete),
+                              title: const Text('Delete'),
+                              onTap: (){
 
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Item with id, ${expenses.items[index].id}is dismissed"),
-                          duration: (const Duration(seconds: 1)),
-                        ));
+                                Navigator.pop(context);
+                              },
+                            )
+                          ],
+                        );}
+                      );
+                    },
+                    child: Dismissible(
+                      key: Key(expenses.items[index].id.toString()),
+                      onDismissed: (direction) {
+                        _confirmDelete(context, () => expenses.delete(expenses.items[index]) );
                       },
                       child: ListTile(
+                        onLongPress: () { 
+                          
+                        },
                           onTap: () {
                             Navigator.push(
                               context, MaterialPageRoute(
@@ -96,7 +150,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           title: Text("${expenses.items[index].category}: ${expenses.items[index].formattedDate}",
                                 style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
                                   )
-                        ));}
+                        ))
+                  );}
                     },
                     separatorBuilder: (context, index) {
                   return const Divider();
@@ -122,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           )
                       );
                     },
-                tooltip: 'Increment',
+                tooltip: 'Add expense entry',
                 child: const Icon(Icons.add),
                   );
                 }));
@@ -179,19 +234,22 @@ class FormPageState extends State<FormPage> {
 
   Future<void> _setDate (BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(context: context, firstDate: DateTime(1999), lastDate: DateTime(2101));
-      formattedDate = DateFormat('EEE, MMM d, y').format(_date);
 
-      setState( () =>  _date = DateTime(pickedDate!.day, pickedDate.month, pickedDate.year)  );
+      if (pickedDate != null) {
+          setState( () {  _date = DateTime(pickedDate.year, pickedDate.month, pickedDate.day); 
+          formattedDate = DateFormat('MMM d, yyyy').format(_date); }
+        );
+      }
   }
 
   @override
   Widget build(BuildContext context) {
     // TextEditingController textController = TextEditingController(text: _date.toString());
-
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
         title: const Text('Enter expense details'),
+        
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -205,14 +263,14 @@ class FormPageState extends State<FormPage> {
                   icon: Icon(Icons.monetization_on),
                   labelText: 'Amount', labelStyle: TextStyle(fontSize: 18)
                 ),
-                // validator: (val ) {
-                //   Pattern pattern = r'^[1-9]\d*(\.\d+)?$';
-                //   RegExp regex = RegExp(pattern as String);
-                //   if (!regex.hasMatch(val!))
-                //     { return 'Enter a valid number.'; }
-                //   else
-                //     { return null;  }
-                // },
+                validator: (val ) {
+                  Pattern pattern = r'^[1-9]\d*(\.\d+)?$';
+                  RegExp regex = RegExp(pattern as String);
+                  if (!regex.hasMatch(val!))
+                    { return 'Enter a valid number.'; }
+                  else
+                    { return null;  }
+                },
                 initialValue: id == 0 ? '' : expenses.byId(id)?.amount.toString(),
                 onSaved: (val) => _amount = double.parse(val!),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),

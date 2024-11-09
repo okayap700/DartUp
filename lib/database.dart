@@ -39,7 +39,8 @@ class SQLiteDbProvider {
 
           await db.execute(
               "INSERT INTO Expense ('id', 'amount', 'date', 'category') values (?, ?, ?, ?)",
-              [1, 1000, '2024-08-14 10:00:00', "FOOD"]);
+              [1, 1000, '2024-08-14 10:00:00', "FOOD"]
+          );
         }
     );
   }
@@ -47,8 +48,7 @@ class SQLiteDbProvider {
   Future<List<Expense>> getAllExpenses() async {
     final db = await database;
 
-    List<Map> results = await db!.query(
-        "Expense", columns: Expense.columns, orderBy: "date DESC");
+    List<Map> results = await db!.query( "Expense", columns: Expense.columns, orderBy: "date DESC" );
 
     List<Expense> expenses = [];
     for (var result in results) {
