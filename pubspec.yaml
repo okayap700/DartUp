@@ -18,6 +18,11 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
+flutter_launcher_icons:
+  image_path: "icon.png" # Path to your app icon image
+  android: true
+  ios: true
+
 environment:
   sdk: ^3.5.0
 
@@ -30,6 +35,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_native_splash: ^2.4.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -39,10 +45,11 @@ dependencies:
   path_provider: ^2.1.4
   scoped_model: ^2.0.0
   intl: any
-  firebase_core: ^2.14.0
-  firebase_auth: ^4.6.2
-  cloud_firestore: ^4.17.5
-  firebase_database: ^10.5.7
+  firebase_core: ^3.7.0
+#  firebase_auth: ^5.3.2
+  cloud_firestore: ^5.4.5
+  firebase_database: ^11.1.5
+  flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
@@ -53,7 +60,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -68,6 +75,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   # assets:
+  #  - assets/images/icon.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -35,7 +35,7 @@ class ExpenseListModel extends Model {
   Future<void> load() async {
     try{
       final dbItems = await _database.getAllExpenses();
-      _items.clear();
+      // _items.clear();
       _items.addAll(dbItems);
       notifyListeners();
     } catch (e) {

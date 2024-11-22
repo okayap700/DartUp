@@ -56,38 +56,61 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final String title;
 
-  void _confirmDelete(BuildContext context, Function delete) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Delete Entry"),
-          content: const Text("Are you sure you want to delete this expense entry?"),
-          actions: <Widget>[
+
+  // void _confirmDelete(BuildContext context, ExpenseListModel expenses, Expense expense) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text("Delete Entry"),
+  //         content: const Text("Are you sure you want to delete this expense entry?"),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             onPressed: () => Navigator.of(context).pop() ,
+  //             child: const Text("Cancel")
+  //           ),
+  //           TextButton(
+  //             onPressed: (){
+  //               // ScopedModel.of<ExpenseListModel>(context).delete(expense) ;
+  //               setState(() => expenses.delete(expense));
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text("Delete"),
+  //           )
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+  Future<bool?> _confirmDelete(BuildContext context, ExpenseListModel expenses, Expense expense ) async {
+    bool confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Confirm'),
+          content: Text('Are you sure you want to delete this expense entry?'),
+          actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop() ,
-              child: const Text("Cancel")
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: (){
-                delete;
-
-                Navigator.of(context).pop();
-              },
-              child: const Text("Delete"),
-            )
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Delete'),
+            ),
           ],
-        );
-      },
+        )
     );
+    if (confirm){
+      setState(() => expenses.delete(expense));
+    }
+    return confirm;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar( title: Text(title), ),
       body: ScopedModelDescendant<ExpenseListModel>(
         builder: (context, child, expenses) {
           return ListView.separated(
@@ -95,46 +118,37 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 if (index == 0 ){
                   return ListTile(
-                    title: Text("Total expenses: ${expenses.totalExpense}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),));
-                } else {
+                    title: Text("Total expenses: ${expenses.totalExpense}",
+                    style: const TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
+                  );
+                    
+                }
+                else {
                   index = index - 1;
                   return GestureDetector(
-                    onLongPress: (){
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (BuildContext context){
-                          return Wrap( children: <Widget>[
-                            ListTile(
-                              leading: const Icon(Icons.edit),
-                              title: const Text('Edit'),
-                              onTap: (){
-                                Navigator.push( context, MaterialPageRoute( builder: (context) => FormPage(
-                                  id: expenses.items[index].id,
-                                  expenses: expenses,))
-                                );
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.delete),
-                              title: const Text('Delete'),
-                              onTap: (){
-
-                                Navigator.pop(context);
-                              },
-                            )
-                          ],
-                        );}
-                      );
-                    },
                     child: Dismissible(
                       key: Key(expenses.items[index].id.toString()),
-                      onDismissed: (direction) {
-                        _confirmDelete(context, () => expenses.delete(expenses.items[index]) );
-                      },
+                      // onDismissed: (direction) =>  _deleteConfirmed( context, expenses, expenses.items[index] ),
+                      confirmDismiss:  (direction) async => await _confirmDelete( context, expenses, expenses.items[index]) ,
                       child: ListTile(
-                        onLongPress: () { 
-                          
-                        },
+                             onLongPress: () {
+                             showModalBottomSheet(
+                               context: context,
+                               builder: (BuildContext context) {
+                                 return Wrap(
+                                  children: <Widget>[
+                                    ListTile(
+                                      leading: const Icon(Icons.delete),
+                                      title: const Text('Delete'),
+                                      onTap: () async {
+                                        Navigator.pop(context);
+                                        await _confirmDelete(context, expenses, expenses.items[index]); 
+                                      },
+                                    )
+                                  ],
+                                );}
+                              );
+                            },
                           onTap: () {
                             Navigator.push(
                               context, MaterialPageRoute(
@@ -180,7 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 tooltip: 'Add expense entry',
                 child: const Icon(Icons.add),
                   );
-                }));
+                }
+              ));
   }
 
 }
